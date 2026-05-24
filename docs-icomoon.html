@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>IcoMoon Free</title>
+    <!-- styles.css fetched and patched at runtime: @font-face src corrected to local woff2/ttf -->
+    <style id="icomoon-css">/* loading… */</style>
+    <style>
+        :root {
+            --bg: #1c1f24;
+            --panel: #262a31;
+            --fg: #e6e6e6;
+            --muted: #8a93a0;
+            --accent: #ffb86b;
+            --accent-dim: rgba(255,184,107,.12);
+            --border: #333842;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: var(--bg);
+            color: var(--fg);
+            padding: 16px 20px 40px;
+        }
+        .toolbar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+            position: sticky;
+            top: 0;
+            background: var(--bg);
+            padding: 8px 0 10px;
+            border-bottom: 1px solid var(--border);
+        }
+        input {
+            flex: 1;
+            max-width: 400px;
+            padding: 7px 12px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--fg);
+            font-size: .9rem;
+            outline: none;
+        }
+        input:focus { border-color: var(--accent); }
+        input::placeholder { color: var(--muted); }
+        .count { font-size: .8rem; color: var(--muted); white-space: nowrap; }
+        .btn {
+            padding: 6px 11px;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--muted);
+            font-size: .8rem;
+            cursor: pointer;
+        }
+        .btn:hover { border-color: var(--accent); color: var(--accent); }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+            gap: 6px;
+            margin-top: 12px;
+        }
+        .card {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding: 9px 11px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            cursor: pointer;
+            transition: border-color .12s, background .12s;
+            overflow: hidden;
+            user-select: none;
+        }
+        .card:hover { border-color: var(--accent); background: var(--accent-dim); }
+        .card i {
+            font-size: 1.15rem;
+            color: var(--accent);
+            flex-shrink: 0;
+            width: 1.2em;
+            text-align: center;
+        }
+        .card span {
+            font-size: .78rem;
+            color: var(--muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .alias-badge {
+            font-size: .62rem;
+            padding: 1px 5px;
+            border-radius: 999px;
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            margin-left: auto;
+            flex-shrink: 0;
+        }
+        .empty { color: var(--muted); font-size: .9rem; padding: 24px 0; }
+        .section-title {
+            font-size: .78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: var(--muted);
+            margin: 28px 0 10px;
+        }
+        .compat-table {
+            width: 100%;
+            max-width: 540px;
+            border-collapse: collapse;
+            font-size: .82rem;
+        }
+        .compat-table th {
+            text-align: left;
+            padding: 5px 10px;
+            color: var(--muted);
+            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+        }
+        .compat-table td { padding: 5px 10px; border-bottom: 1px solid var(--border); }
+        .compat-table td code {
+            background: var(--bg);
+            padding: 1px 5px;
+            border-radius: 3px;
+            font-size: .8rem;
+        }
+        .compat-table td i { color: var(--accent); margin-right: 6px; }
+        .arrow { color: var(--muted); }
+        .toast {
+            position: fixed;
+            bottom: 20px; right: 20px;
+            background: var(--panel);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            padding: 7px 13px;
+            border-radius: 6px;
+            font-size: .82rem;
+            font-weight: 600;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity .2s;
+            z-index: 100;
+        }
+        .toast.show { opacity: 1; }
+    </style>
+</head>
+<body>
+    <div class="toolbar">
+        <input id="search" type="text" placeholder="Buscar ícone (ex: arrow, file, heart…)" oninput="onSearch()">
+        <span class="count" id="count"></span>
+        <button class="btn" id="btn-clear" style="display:none" onclick="clearSearch()">✕ limpar</button>
+    </div>
+    <div class="grid" id="grid"></div>
+    <div class="empty" id="empty" style="display:none">Nenhum resultado.</div>
+
+    <div id="compat-section" style="display:none">
+        <div class="section-title">Compat layer — aliases FSPHP → IcoMoon</div>
+        <table class="compat-table">
+            <thead>
+                <tr>
+                    <th>Alias (nome FSPHP)</th>
+                    <th></th>
+                    <th>Nome nativo IcoMoon</th>
+                    <th>Ícone</th>
+                </tr>
+            </thead>
+            <tbody id="compat-body"></tbody>
+        </table>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const ALIASES = [
+            { alias: 'bar-chart',     native: 'stats-bars'    },
+            { alias: 'check',         native: 'checkmark'     },
+            { alias: 'chevron-left',  native: 'arrow-left2'   },
+            { alias: 'chevron-right', native: 'arrow-right2'  },
+            { alias: 'clock-o',       native: 'clock'         },
+            { alias: 'coffee',        native: 'mug'           },
+            { alias: 'comments',      native: 'bubbles2'      },
+            { alias: 'envelope',      native: 'envelop'       },
+            { alias: 'sign-in',       native: 'enter'         },
+            { alias: 'sign-out',      native: 'exit'          },
+            { alias: 'times-circle',  native: 'cancel-circle' },
+            { alias: 'trash',         native: 'bin'           },
+            { alias: 'unlock-alt',    native: 'unlocked'      },
+        ]
+        const ALIAS_MAP = new Map(ALIASES.map(a => [a.alias, a.native]))
+
+        let ALL_ICONS = []
+        let toastTimer = null
+
+        function extractIcons(css) {
+            const names = new Set()
+            const re = /\.icon-([\w-]+):before\s*\{[^}]*content:\s*["']\\[0-9a-fA-F]+["']/g
+            let m
+            while ((m = re.exec(css)) !== null) names.add(m[1])
+            return [...names].sort()
+        }
+
+        function buildIcons(names) {
+            const aliasItems  = ALIASES.map(a => ({ name: a.alias, alias: true,  native: a.native }))
+            const nativeItems = names
+                .filter(n => !ALIAS_MAP.has(n))
+                .map(n => ({ name: n, alias: false, native: n }))
+            return [...aliasItems, ...nativeItems].sort((a, b) => a.name.localeCompare(b.name))
+        }
+
+        function cardHTML(item) {
+            const iconClass = 'icon-' + (item.alias ? item.native : item.name)
+            const badge     = item.alias ? `<span class="alias-badge">alias</span>` : ''
+            const title     = item.alias ? `alias de icon-${item.native}` : `icon-${item.name}`
+            return `<div class="card" onclick="copyIcon('${item.name}')" title="${title}">
+                        <i class="${iconClass}"></i>
+                        <span>${item.name}</span>${badge}
+                    </div>`
+        }
+
+        function renderGrid(icons, query) {
+            document.getElementById('grid').innerHTML = icons.map(cardHTML).join('')
+            document.getElementById('empty').style.display = icons.length === 0 ? '' : 'none'
+            document.getElementById('count').textContent = icons.length + ' / ' + ALL_ICONS.length
+            document.getElementById('compat-section').style.display = query ? 'none' : ''
+        }
+
+        function onSearch() {
+            const q = document.getElementById('search').value.toLowerCase().trim()
+            document.getElementById('btn-clear').style.display = q ? '' : 'none'
+            renderGrid(q ? ALL_ICONS.filter(i => i.name.includes(q)) : ALL_ICONS, q)
+        }
+
+        function clearSearch() {
+            document.getElementById('search').value = ''
+            document.getElementById('btn-clear').style.display = 'none'
+            renderGrid(ALL_ICONS, '')
+        }
+
+        function copyIcon(name) {
+            navigator.clipboard.writeText('icon-' + name).catch(() => {})
+            const t = document.getElementById('toast')
+            t.textContent = '📋 icon-' + name + ' copiado!'
+            t.classList.add('show')
+            clearTimeout(toastTimer)
+            toastTimer = setTimeout(() => t.classList.remove('show'), 1800)
+        }
+
+        // Build compat table
+        document.getElementById('compat-body').innerHTML = ALIASES.map(a => `
+            <tr>
+                <td><code>icon-${a.alias}</code></td>
+                <td class="arrow">→</td>
+                <td><code>icon-${a.native}</code></td>
+                <td><i class="icon-${a.native}"></i></td>
+            </tr>`).join('')
+
+        // Fetch styles.css, fix @font-face to use local files, inject as <style>
+        fetch('styles.css')
+            .then(r => r.text())
+            .then(css => {
+                const fixed = css.replace(
+                    /@font-face\s*\{[^}]*font-family:\s*['"]icomoon['"][^}]*\}/s,
+                    `@font-face {
+    font-family: 'icomoon';
+    src: url('icomoon.woff2') format('woff2'),
+         url('icomoon.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}`
+                )
+                document.getElementById('icomoon-css').textContent = fixed
+                ALL_ICONS = buildIcons(extractIcons(css))
+                renderGrid(ALL_ICONS, '')
+            })
+    </script>
+</body>
+</html>

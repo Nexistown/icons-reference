@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>FSPHP Native Icons</title>
+    <link rel="stylesheet" href="assets/icons.css">
+    <style>
+        :root {
+            --bg: #1c1f24;
+            --panel: #262a31;
+            --fg: #e6e6e6;
+            --muted: #8a93a0;
+            --accent: #61ddbc;
+            --accent-dim: rgba(97,221,188,.12);
+            --border: #333842;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: var(--bg);
+            color: var(--fg);
+            padding: 16px 20px 40px;
+        }
+        .toolbar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+            position: sticky;
+            top: 0;
+            background: var(--bg);
+            padding: 8px 0 10px;
+            border-bottom: 1px solid var(--border);
+        }
+        input {
+            flex: 1;
+            max-width: 400px;
+            padding: 7px 12px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--fg);
+            font-size: .9rem;
+            outline: none;
+        }
+        input:focus { border-color: var(--accent); }
+        input::placeholder { color: var(--muted); }
+        .count { font-size: .8rem; color: var(--muted); white-space: nowrap; }
+        .btn {
+            padding: 6px 11px;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--muted);
+            font-size: .8rem;
+            cursor: pointer;
+        }
+        .btn:hover { border-color: var(--accent); color: var(--accent); }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+            gap: 6px;
+            margin-top: 12px;
+        }
+        .card {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding: 9px 11px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            cursor: pointer;
+            transition: border-color .12s, background .12s;
+            overflow: hidden;
+            user-select: none;
+        }
+        .card:hover { border-color: var(--accent); background: var(--accent-dim); }
+        .card i {
+            font-size: 1.15rem;
+            color: var(--accent);
+            flex-shrink: 0;
+            width: 1.2em;
+            text-align: center;
+        }
+        .card span {
+            font-size: .78rem;
+            color: var(--muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .empty { color: var(--muted); font-size: .9rem; padding: 24px 0; }
+        .toast {
+            position: fixed;
+            bottom: 20px; right: 20px;
+            background: var(--panel);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            padding: 7px 13px;
+            border-radius: 6px;
+            font-size: .82rem;
+            font-weight: 600;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity .2s;
+            z-index: 100;
+        }
+        .toast.show { opacity: 1; }
+    </style>
+</head>
+<body>
+    <div class="toolbar">
+        <input id="search" type="text" placeholder="Buscar ícone (ex: bell, user, home…)" oninput="onSearch()">
+        <span class="count" id="count"></span>
+        <button class="btn" id="btn-clear" style="display:none" onclick="clearSearch()">✕ limpar</button>
+    </div>
+    <div class="grid" id="grid"></div>
+    <div class="empty" id="empty" style="display:none">Nenhum resultado.</div>
+    <div class="toast" id="toast"></div>
+
+    <script>
+        let ALL_ICONS = []
+        let toastTimer = null
+
+        function extractIcons(css) {
+            const names = new Set()
+            const re = /\.icon-([\w-]+):before\s*\{[^}]*content:\s*["']\\[0-9a-fA-F]+["']/g
+            let m
+            while ((m = re.exec(css)) !== null) names.add(m[1])
+            return [...names].sort()
+        }
+
+        function renderGrid(icons) {
+            const grid = document.getElementById('grid')
+            grid.innerHTML = icons.map(name => `
+                <div class="card" onclick="copyIcon('${name}')" title="icon-${name}">
+                    <i class="icon-${name}"></i>
+                    <span>${name}</span>
+                </div>
+            `).join('')
+            document.getElementById('empty').style.display = icons.length === 0 ? '' : 'none'
+            document.getElementById('count').textContent = icons.length + ' / ' + ALL_ICONS.length
+        }
+
+        function onSearch() {
+            const q = document.getElementById('search').value.toLowerCase().trim()
+            document.getElementById('btn-clear').style.display = q ? '' : 'none'
+            renderGrid(q ? ALL_ICONS.filter(n => n.includes(q)) : ALL_ICONS)
+        }
+
+        function clearSearch() {
+            document.getElementById('search').value = ''
+            document.getElementById('btn-clear').style.display = 'none'
+            renderGrid(ALL_ICONS)
+        }
+
+        function copyIcon(name) {
+            navigator.clipboard.writeText('icon-' + name).catch(() => {})
+            const t = document.getElementById('toast')
+            t.textContent = '📋 icon-' + name + ' copiado!'
+            t.classList.add('show')
+            clearTimeout(toastTimer)
+            toastTimer = setTimeout(() => t.classList.remove('show'), 1800)
+        }
+
+        fetch('assets/icons.css')
+            .then(r => r.text())
+            .then(css => {
+                ALL_ICONS = extractIcons(css)
+                renderGrid(ALL_ICONS)
+            })
+    </script>
+</body>
+</html>
