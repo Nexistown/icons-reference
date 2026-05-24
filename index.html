@@ -3,15 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Icon Reference — FSPHP + IcoMoon</title>
+    <title>Icon Reference — Nexistown</title>
+    <link rel="icon" type="image/png" href="nexistown-logo.png">
     <style>
         :root {
             --bg: #1c1f24;
             --fg: #e6e6e6;
             --muted: #8a93a0;
             --border: #333842;
-            --accent: #61ddbc;
-            --accent-dim: rgba(97,221,188,.12);
+            --accent:     #34D57F;
+            --accent-dim: rgba(52,213,127,.12);
+            --accent-strong: #03461B;
+            --accent-light:  #7FD3B2;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         html, body { height: 100%; }
@@ -25,17 +28,45 @@
         .shell {
             display: flex;
             align-items: center;
-            gap: 16px;
-            padding: 10px 20px;
+            gap: 14px;
+            padding: 8px 20px;
             border-bottom: 1px solid var(--border);
             background: var(--bg);
             flex-shrink: 0;
         }
-        .shell h1 { font-size: 1rem; font-weight: 700; white-space: nowrap; }
-        .tabs { display: flex; }
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+        .brand img {
+            height: 28px;
+            width: auto;
+            display: block;
+        }
+        .brand span {
+            font-size: .88rem;
+            font-weight: 700;
+            color: var(--accent);
+            white-space: nowrap;
+            letter-spacing: -.01em;
+        }
+        .divider {
+            width: 1px;
+            height: 20px;
+            background: var(--border);
+            flex-shrink: 0;
+        }
+        .page-title {
+            font-size: .82rem;
+            color: var(--muted);
+            white-space: nowrap;
+        }
+        .tabs { display: flex; margin-left: auto; }
         .tab {
-            padding: 7px 16px;
-            font-size: .84rem;
+            padding: 6px 15px;
+            font-size: .82rem;
             font-weight: 600;
             cursor: pointer;
             border: 1px solid var(--border);
@@ -60,7 +91,11 @@
 </head>
 <body>
     <div class="shell">
-        <h1>🎨 Icon Reference</h1>
+        <a class="brand" href="https://nexistown.com.br" target="_blank">
+            <img src="nexistown-logo.png" alt="Nexistown">
+        </a>
+        <div class="divider"></div>
+        <span class="page-title">Icon Reference</span>
         <div class="tabs">
             <button class="tab active" id="tab-fsphp" onclick="switchTab('fsphp')">FSPHP Native Icons</button>
             <button class="tab" id="tab-icomoon" onclick="switchTab('icomoon')">IcoMoon Free</button>
@@ -74,7 +109,7 @@
             icomoon: 'docs-icomoon.html',
         }
         const ACCENTS = {
-            fsphp:   ['#61ddbc', 'rgba(97,221,188,.12)'],
+            fsphp:   ['#34D57F', 'rgba(52,213,127,.12)'],
             icomoon: ['#ffb86b', 'rgba(255,184,107,.12)'],
         }
         let current = 'fsphp'
